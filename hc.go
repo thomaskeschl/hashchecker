@@ -11,6 +11,7 @@ import(
 	"fmt"
 	"flag"
 	"hash"
+	"os"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 	// ensure a file has been entered.
 	if len(*inputFilePtr) == 0 {
 		fmt.Println("Need to enter a file to hash.")
-		return
+		os.Exit(1)
 	} 
 
 	filepath := *inputFilePtr
@@ -30,7 +31,7 @@ func main() {
 	f,err := ioutil.ReadFile(filepath)
 	if err != nil {
 		fmt.Println("%s", err)
-		return
+		os.Exit(2)
 	}
 
 	hashStr := *inputTypePtr
@@ -38,7 +39,7 @@ func main() {
 	hash := generateSum(hashStr)
 	if hash == nil {
 		fmt.Println("No such hashing function: ", hashStr)
-		return
+		os.Exit(3)
 	}
 	hash.Write(f)
 
@@ -48,14 +49,15 @@ func main() {
 	if len(*inputHashPtr) != 0 {
 		compareStr := *inputHashPtr
 		if compareStr == sumStr {
-			fmt.Printf("They match!")
+			fmt.Println("They match!")
 		} else {
-			fmt.Printf("They don't match!")
+			fmt.Println("They don't match!")
 		}
-		return;
+		os.Exit(0)
 	}
 
 	fmt.Println(sumStr)
+	os.Exit(0)
 }
 
 func generateSum(hashStr string) hash.Hash {
