@@ -6,7 +6,7 @@ Go program that with various flags that help you generate and confirm hashes for
 Setup
 ----------
 ```
-go get "github.com/thomaskeschl/hashchecker"
-go build hc.go
+go get github.com/thomaskeschl/hashchecker
+go build -o <location on your path>/hc.exe github.com/thomaskeschl/hashchecker
 hc -h
 ```
