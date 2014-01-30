@@ -2,70 +2,75 @@
 // source code is governed by a MIT-style license that can be found in
 // the LICENSE file.
 
-package main 
+package main
 
 import(
-	"io/ioutil"
-	"crypto/md5"
-	"crypto/sha1"
-	"fmt"
-	"flag"
-	"hash"
-	"os"
+    "io"
+    "crypto/md5"
+    "crypto/sha1"
+    "fmt"
+    "flag"
+    "hash"
+    "os"
+    "log"
 )
 
 func main() {
-	inputFilePtr := flag.String("f", "", "path to the file to generate the hash for")
-	inputHashPtr := flag.String("c", "", "the hash string to compare against")
-	inputTypePtr := flag.String("t", "md5", "the hashing function to use (valid options are md5, sha1)")
-	flag.Parse()
+    inputFilePtr := flag.String("f", "", "path to the file to generate the hash for")
+    inputHashPtr := flag.String("c", "", "the hash string to compare against")
+    inputTypePtr := flag.String("t", "md5", "the hashing function to use (valid options are md5, sha1)")
+    flag.Parse()
 
-	// ensure a file has been entered.
-	if len(*inputFilePtr) == 0 {
-		fmt.Println("Need to enter a file to hash.")
-		os.Exit(1)
-	} 
+    // ensure a file has been entered.
+    if len(*inputFilePtr) == 0 {
+        log.Fatal("Need to enter a file to hash.")
+    }
 
-	filepath := *inputFilePtr
+    filepath := *inputFilePtr
 
-	f,err := ioutil.ReadFile(filepath)
-	if err != nil {
-		fmt.Println("%s", err)
-		os.Exit(2)
-	}
+    f,err := os.Open(filepath)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer f.Close()
 
-	hashStr := *inputTypePtr
 
-	hash := generateSum(hashStr)
-	if hash == nil {
-		fmt.Println("No such hashing function: ", hashStr)
-		os.Exit(3)
-	}
-	hash.Write(f)
+    hashStr := *inputTypePtr
 
-	sum := hash.Sum(nil)
-	sumStr := fmt.Sprintf("%x", sum)
+    hasher := generateSum(hashStr)
+    if hasher == nil {
+        log.Fatal("No such hashing function: ", hashStr)
+    }
 
-	if len(*inputHashPtr) != 0 {
-		compareStr := *inputHashPtr
-		if compareStr == sumStr {
-			fmt.Println("They match!")
-		} else {
-			fmt.Println("They don't match!")
-		}
-		os.Exit(0)
-	}
+    _, err = io.Copy(hasher, f)
 
-	fmt.Println(sumStr)
-	os.Exit(0)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    sum := hasher.Sum(nil)
+    sumStr := fmt.Sprintf("%x", sum)
+
+    if len(*inputHashPtr) != 0 {
+        compareStr := *inputHashPtr
+        if compareStr == sumStr {
+            fmt.Println("They match!")
+        } else {
+            fmt.Println("They don't match!")
+        }
+        os.Exit(0)
+    }
+
+    fmt.Println(sumStr)
+    os.Exit(0)
 }
 
 func generateSum(hashStr string) hash.Hash {
-	switch {
-		case hashStr == "md5":
-			return md5.New()
-		case hashStr == "sha1":
-			return sha1.New()
-	}
-	return nil
+    switch {
+        case hashStr == "md5":
+            return md5.New()
+        case hashStr == "sha1":
+            return sha1.New()
+    }
+    return nil
 }
